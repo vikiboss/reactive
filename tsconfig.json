@@ -6,8 +6,8 @@
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "ES2015",
+    "module": "ES2015",
     "skipLibCheck": true
   }
 }
