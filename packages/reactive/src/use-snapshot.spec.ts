@@ -1,8 +1,9 @@
-import { act, renderHook } from "@testing-library/react-hooks/dom";
-import { useSnapshot } from "./use-snapshot.js";
-import { getSnapshot } from "./utils.js";
 import { describe, it, expect } from "vitest";
+import { act, renderHook } from "@testing-library/react-hooks/dom";
+
 import { proxy } from "./proxy.js";
+import { getSnapshot } from "./snapshot.js";
+import { useSnapshot } from "./use-snapshot.js";
 
 describe("useSnapShot", () => {
   it("should return proxyState snapshot", () => {
@@ -20,13 +21,11 @@ describe("useSnapShot", () => {
       },
     });
 
-    const { result, waitForNextUpdate } = renderHook(() => useSnapshot(proxyState));
+    const { result } = renderHook(() => useSnapshot(proxyState));
 
     act(() => {
       proxyState.address.city.name = "北京";
     });
-
-    await waitForNextUpdate();
 
     expect(result.current.address.city.name).toEqual("北京");
   });
@@ -44,7 +43,6 @@ describe("useSnapShot", () => {
 
     expect(() => {
       act(() => {
-        // @ts-expect-error: for test
         result.current.address.city.name = "北京";
       });
     }).toThrowError();

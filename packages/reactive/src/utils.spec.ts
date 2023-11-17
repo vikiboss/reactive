@@ -2,7 +2,6 @@ import {
   isObject,
   canProxy,
   createObjectFromPrototype,
-  getSnapshot,
   SNAPSHOT,
   LISTENERS,
   REACTIVE,
@@ -78,18 +77,6 @@ describe("Object Utils", () => {
       expect(SNAPSHOT).toBeDefined();
       expect(LISTENERS).toBeDefined();
       expect(REACTIVE).toBeDefined();
-    });
-  });
-
-  describe("getSnapshot", () => {
-    it("should get snapshot from proxyState", () => {
-      const proxyState = { [SNAPSHOT]: "snapshot" } as any;
-      expect(getSnapshot(proxyState)).toBe("snapshot");
-    });
-
-    it("should return undefined if no snapshot", () => {
-      const proxyState = {} as any;
-      expect(getSnapshot(proxyState)).toBeUndefined();
     });
   });
 });

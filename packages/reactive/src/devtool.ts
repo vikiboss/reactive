@@ -1,5 +1,6 @@
+import { getSnapshot } from "./snapshot.js";
 import { proxy, subscribe } from "./index.js";
-import { REACTIVE_STORE_CHANGED, getSnapshot } from "./utils.js";
+import { REACTIVE_STORE_CHANGED } from "./utils.js";
 
 import type { Config } from "@redux-devtools/extension";
 import type { DevtoolOptions } from "./index.js";
@@ -55,7 +56,7 @@ export function enableDevtool(
   devtool.init(getSnapshot(state));
 
   devtool.subscribe((message) => {
-    console.debug("message: ", message);
+    console.debug("message from redux-devtools: ", message);
 
     if (message.type !== "DISPATCH") return;
     if (!message.payload) return;

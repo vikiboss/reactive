@@ -1,50 +1,42 @@
-import { useCallback, useRef } from "react";
-import { createProxy, isChanged } from "proxy-compare";
+import { useCallback } from "react";
 import { useSyncExternalStoreWithSelector } from "use-sync-external-store/shim/with-selector.js";
-import { getSnapshot } from "./utils.js";
+
 import { subscribe } from "./subscribe.js";
+import { deepPreventExtensions, deepFreeze, isObject, IsEqual } from "./utils.js";
+import { getSnapshot } from "./snapshot.js";
 
-import type { DeepReadonly } from "./utils.js";
-
-export interface SnapshotOptions {
-  sync?: boolean;
-}
-
-const globalTargetCache = new WeakMap<object, any>();
-const globalProxyCache = new WeakMap<object, any>();
-
-export function useSnapshot<T extends object>(
+/**
+ * @description use snapshot of the store, optionally with selector or custom `isEqual`
+ *
+ * @example
+ *
+ * ```ts
+ * // => use snapshot of the entire store
+ * const snap = store.useSnapshot();
+ * // => use snapshot with `selector`
+ * const name = store.useSnapshot((s) => s.name);
+ * // => use snapshot with `selector` & custom `isEqual`
+ * const count = store.useSnapshot((s) => s.count, Object.is);
+ * ```
+ */
+export function useSnapshot<T extends object, S = T>(
   proxyState: T,
-  options?: SnapshotOptions
-): DeepReadonly<T> {
-  const { sync: updateInSync = false } = options || {};
-  const affected = new WeakMap();
-  const lastAffected = useRef<typeof affected>(affected);
-
-  const _subscribe = useCallback(
-    (callback: () => void) => subscribe(proxyState, callback, updateInSync),
-    [proxyState, updateInSync]
-  );
-
+  selector: (snap: T) => S = (snap) => snap as unknown as S,
+  isEqual: IsEqual<S> = () => false
+) {
+  const _subscribe = useCallback((cb) => subscribe(proxyState, cb), [proxyState]);
   const _getSnapshot = useCallback(() => getSnapshot(proxyState), [proxyState]);
 
   const snapshot = useSyncExternalStoreWithSelector(
     _subscribe,
     _getSnapshot,
     _getSnapshot,
-    (snap) => snap,
-    (a, b) => {
-      /**
-       *  disable rendering optimization temporarily to avoid render issue caused by `proxy-compare`
-       *  @see https://github.com/dai-shi/proxy-compare/issues/65
-       */
-      return false;
-
-      // return !isChanged(a, b, lastAffected.current, new WeakMap());
-    }
+    selector,
+    isEqual
   );
 
-  lastAffected.current = affected;
+  isObject(snapshot) && deepFreeze(snapshot);
+  // isObject(snapshot) && deepPreventExtensions(snapshot);
 
-  return createProxy(snapshot, affected, globalProxyCache, globalTargetCache);
+  return snapshot;
 }

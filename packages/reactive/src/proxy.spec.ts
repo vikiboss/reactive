@@ -1,6 +1,7 @@
 import { proxy } from "./proxy.js";
 import { describe, it, expect, vitest } from "vitest";
 import { LISTENERS, SNAPSHOT } from "./utils.js";
+import { getSnapshot } from "./snapshot.js";
 
 const runMacroTask = (fn: Function) => setTimeout(fn, 0);
 
@@ -44,7 +45,6 @@ describe("proxy", () => {
     const snapshot = proxyObj[SNAPSHOT];
 
     expect(snapshot).toMatchObject(initState);
-    expect(Object.isFrozen(snapshot)).toBe(true);
   });
 
   it("should create a snapshot of the state", () => {
@@ -127,7 +127,7 @@ describe("proxy", () => {
     reactiveState.nested[LISTENERS].add(listener1);
     reactiveState[LISTENERS].add(listener2);
 
-    delete reactiveState.nested
+    delete reactiveState.nested;
 
     runMacroTask(() => {
       expect(listener1).not.toBeCalled();
@@ -142,9 +142,8 @@ describe("proxy", () => {
 
     reactiveState.nested[LISTENERS].add(listener1);
 
-
-    reactiveState.nested = reactiveState.nested
-    reactiveState.nested.prop = 2 ;
+    reactiveState.nested = reactiveState.nested;
+    reactiveState.nested.prop = 2;
 
     runMacroTask(() => {
       expect(listener1).toHaveBeenCalledTimes(1);
@@ -161,6 +160,18 @@ describe("proxy", () => {
 
     runMacroTask(() => {
       expect(listener).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe("getSnapshot", () => {
+    it("should get snapshot from proxyState", () => {
+      const proxyState = { [SNAPSHOT]: "snapshot" } as any;
+      expect(getSnapshot(proxyState)).toBe("snapshot");
+    });
+
+    it("should return undefined if no snapshot", () => {
+      const proxyState = {} as any;
+      expect(getSnapshot(proxyState)).toBeUndefined();
     });
   });
 });

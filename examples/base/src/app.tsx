@@ -8,23 +8,17 @@ import {
   pushToArray,
   store,
 } from "./store";
-import { memo } from "react"
+import { memo } from "react";
+import { create } from "zustand";
+import Basic from "./basic";
 
 export default function App() {
-  // const state = store.useSnapshot();
-  const state = store.useSnapshot({ sync: true });
-
   return (
     <>
-      <input
-        type="text"
-        value={state.inputValue}
-        onChange={(e) => {
-          store.mutate.inputValue = e.target.value;
-        }}
-      />
+      <Basic />
+      <Zustand />
       <Children />
-        <C2 />
+      <C2 />
       <div>
         <button onClick={mutateTopProperty}>mutate top property</button>
         <button onClick={mutateNestedProperty}>mutate nested property</button>
@@ -53,9 +47,35 @@ function Children() {
   return <pre style={{ marginBottom: "2rem" }}>{content}</pre>;
 }
 
-
 const C2 = memo(() => {
-  const state = store.useSnapshot();
-  console.log('render C2');
-  return <h1>{state.name}</h1>
-})
+  const state = store.useSnapshot((state) => state);
+  console.log("render C2");
+  return <h1>{state.name}</h1>;
+});
+
+const useStore = create<{ value: string; changeValue: () => Promise<void> }>((set) => ({
+  value: "name",
+  changeValue: async () => {
+    set({ value: "1" });
+    set({ value: "2" });
+    set({ value: "3" });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    set({ value: "4" });
+    set({ value: "5" });
+    set({ value: "6" });
+  },
+}));
+
+function Zustand() {
+  const value = useStore((state) => state.value);
+  const changeValue = useStore((state) => state.changeValue);
+
+  console.log("render", value);
+
+  return (
+    <div>
+      <input type="text" defaultValue={value} />
+      <button onClick={() => changeValue()}>change</button>
+    </div>
+  );
+}
